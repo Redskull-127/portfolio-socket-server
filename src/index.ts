@@ -1,19 +1,23 @@
-import 'dotenv/config'
+import { Server } from "socket.io";
 
-import {Server} from "socket.io"
+const app = require('express')();
+const server = require('http').createServer(app);
+const io = require('socket.io')(server, { cors: { origin: "*" } });
+const port = process.env.PORT || 8989;
 
+app.get('/', function(req: any, res: any) {
+  res.sendfile('./src/index.html');
+});
 
-const io = new Server(process.env.NODE_ENV === "production" ? 80 : 8989, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-    }
-})
+server.listen(port, function(err: Error) {
+  console.log(`Listening on port ${port}`);
+  if (err) {
+    console.log(err);
+  }
+});
 
-io.on("connection", socket => {
-    console.log("connected")
-    socket.on("send:message", (message) => {
-        console.log(message)
-        io.emit("receive:message", message)
-    })
-})
+io.on("connection", (socket: Server) => {
+  socket.on("send:message", (message) => {
+    io.emit("receive:message", message);
+  });
+});
